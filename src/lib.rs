@@ -1,10 +1,14 @@
 #![allow(clippy::type_complexity)]
 
 mod actions;
+mod board;
 mod audio;
 mod loading;
 mod menu;
 mod player;
+mod vectors;
+mod states;
+
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;

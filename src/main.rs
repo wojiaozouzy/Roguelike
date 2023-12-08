@@ -11,6 +11,7 @@ use winit::window::Icon;
 mod assets;
 mod globals;
 mod states;
+mod vectors;
 fn main() {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
