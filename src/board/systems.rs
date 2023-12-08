@@ -10,6 +10,8 @@ pub fn spawn_map(
     mut commands: Commands,
     mut current: ResMut<CurrentBoard>
 ) {
+ 
+    // todo!();
     current.tiles = HashMap::new();
     for x in 0..8 {
         for y in 0..8 {

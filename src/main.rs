@@ -12,6 +12,7 @@ mod assets;
 mod globals;
 mod states;
 mod vectors;
+mod board;
 fn main() {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
@@ -39,7 +40,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .add_state::<states::MainState>()
-        .add_plugins((assets::AssetPlugin, GamePlugin))
+        .add_plugins((assets::AssetPlugin, GamePlugin,board::BoardPlugin))
         .add_systems(Startup, set_window_icon)
         .run();
 }
