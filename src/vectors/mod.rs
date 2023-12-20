@@ -1,6 +1,8 @@
+mod utils;
+pub use utils::find_path;
 use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, Default, Ord, PartialOrd, PartialEq, Eq, Hash)]
 pub struct Vector2Int {
     pub x: i32,
     pub y: i32,

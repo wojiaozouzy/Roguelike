@@ -5,14 +5,22 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
-use my_bevy_roguelike::GamePlugin;
+// use my_bevy_roguelike::GamePlugin;
 use std::io::Cursor;
 use winit::window::Icon;
+
+mod actions;
 mod assets;
+mod board;
+mod camera;
 mod globals;
+mod graphics;
+mod input;
+mod manager;
+mod pieces;
+mod player;
 mod states;
 mod vectors;
-mod board;
 fn main() {
     #[cfg(target_arch = "wasm32")]
     console_error_panic_hook::set_once();
@@ -40,8 +48,18 @@ fn main() {
                 .set(ImagePlugin::default_nearest()),
         )
         .add_state::<states::MainState>()
-        .add_plugins((assets::AssetPlugin, GamePlugin,board::BoardPlugin))
-        .add_systems(Startup, set_window_icon)
+        .add_state::<states::GameState>()
+        .add_plugins((
+            graphics::GraphicsPlugin,
+            assets::AssetPlugin,
+            board::BoardPlugin,
+            player::PlayerPlugin,
+            input::InputPlugin,
+            actions::ActionsPlugin,
+            manager::ManagerPlugin,
+            pieces::PiecesPlugin,
+        ))
+        .add_systems(Startup, (set_window_icon, camera::setup))
         .run();
 }
 

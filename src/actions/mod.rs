@@ -1,60 +1,66 @@
-use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
+use std::collections::VecDeque;
 
-use crate::actions::game_control::{get_movement, GameControl};
-use crate::player::Player;
-use crate::GameState;
-
-mod game_control;
-
-pub const FOLLOW_EPSILON: f32 = 5.;
-
+use crate::states::GameState;
+pub mod models;
+mod systems;
 pub struct ActionsPlugin;
-
-// This plugin listens for keyboard input and converts the input into Actions
-// Actions can then be used as a resource in other systems to act on the player input.
 impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Actions>().add_systems(
-            Update,
-            set_movement_actions.run_if(in_state(GameState::Playing)),
-        );
+        app.init_resource::<ActorQueue>()
+            .add_event::<TickEvent>()
+            .add_event::<NextActorEvent>()
+            .add_event::<ActionsCompleteEvent>()
+            .add_event::<InvalidPlayerActionEvent>()
+            .configure_sets(
+                Update,
+                (
+                    ActionSet::Planning.run_if(on_event::<NextActorEvent>()),
+                    ActionSet::Planning.before(ActionSet::Late),
+                ),
+            )
+            .add_systems(
+                Update,
+                (
+                    systems::process_action_queue
+                        .run_if(on_event::<TickEvent>())
+                        .in_set(ActionSet::Late),
+                    (systems::plan_walk, systems::plan_melee).in_set(ActionSet::Planning),
+                ),
+            )
+            .add_systems(
+                OnExit(GameState::PlayerInput),
+                systems::populate_actor_queue,
+            );
     }
 }
 
+pub trait Action: Send + Sync {
+    fn execute(&self, world: &mut World) -> Result<Vec<Box<dyn Action>>, ()>;
+}
+impl std::fmt::Debug for dyn Action {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // 在这里实现输出的格式
+    
+        write!(f, "{:?}", self as *const _)
+    }
+}
+
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+enum ActionSet {
+    Planning,
+    Late,
+}
 #[derive(Default, Resource)]
-pub struct Actions {
-    pub player_movement: Option<Vec2>,
-}
-
-pub fn set_movement_actions(
-    mut actions: ResMut<Actions>,
-    keyboard_input: Res<Input<KeyCode>>,
-    touch_input: Res<Touches>,
-    player: Query<&Transform, With<Player>>,
-    camera: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
-) {
-    let mut player_movement = Vec2::new(
-        get_movement(GameControl::Right, &keyboard_input)
-            - get_movement(GameControl::Left, &keyboard_input),
-        get_movement(GameControl::Up, &keyboard_input)
-            - get_movement(GameControl::Down, &keyboard_input),
-    );
-
-    if let Some(touch_position) = touch_input.first_pressed_position() {
-        let (camera, camera_transform) = camera.single();
-        if let Some(touch_position) = camera.viewport_to_world_2d(camera_transform, touch_position)
-        {
-            let diff = touch_position - player.single().translation.xy();
-            if diff.length() > FOLLOW_EPSILON {
-                player_movement = diff.normalize();
-            }
-        }
-    }
-
-    if player_movement != Vec2::ZERO {
-        actions.player_movement = Some(player_movement.normalize());
-    } else {
-        actions.player_movement = None;
-    }
-}
+pub struct PendingActions(pub Vec<Box<dyn Action>>);
+ 
+#[derive(Default, Resource)]
+pub struct ActorQueue(pub VecDeque<Entity>);
+#[derive(Event)]
+pub struct TickEvent;
+#[derive(Event)]
+pub struct NextActorEvent;
+#[derive(Event)]
+pub struct ActionsCompleteEvent;
+#[derive(Event)]
+pub struct InvalidPlayerActionEvent;
