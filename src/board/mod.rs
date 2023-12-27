@@ -5,7 +5,7 @@ use crate::states::MainState;
 use crate::vectors::Vector2Int;
 pub mod components;
 mod systems;
-
+mod dungeon;
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {

@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 use crate::vectors::Vector2Int;
 
-#[derive(Component)]
+#[derive(Component,Debug)]
 pub struct Position {
     pub v: Vector2Int
 }

@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
-use crate::board::components::Position;
+use crate::{board::components::Position, states::TurnSet, vectors::Vector2Int};
 
 mod assets;
+mod components;
 mod pieces;
 mod tiles;
 
@@ -26,10 +27,15 @@ impl Plugin for GraphicsPlugin {
             .add_systems(
                 Update,
                 (
-                    pieces::spawn_piece_renderer,
-                    pieces::update_piece_position,
-                    tiles::spawn_tile_renderer,
-                ),
+                    pieces::walk_animation,
+                    pieces::melee_animation,
+                    pieces::path_animator_update,
+                )
+                    .in_set(TurnSet::Animation),
+            )
+            .add_systems(
+                Update,
+                (pieces::spawn_piece_renderer, tiles::spawn_tile_renderer),
             );
     }
 }
@@ -40,4 +46,8 @@ fn get_world_position(position: &Position, z: f32) -> Vec3 {
         TILE_SIZE * position.v.y as f32,
         z,
     )
+}
+
+fn get_world_vec(v: Vector2Int, z: f32) -> Vec3 {
+    Vec3::new(TILE_SIZE * v.x as f32, TILE_SIZE * v.y as f32, z)
 }

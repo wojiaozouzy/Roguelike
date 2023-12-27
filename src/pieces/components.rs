@@ -4,7 +4,7 @@ use crate::actions::Action;
 
 
 
-#[derive(Component)]
+#[derive(Component,Debug)]
 pub struct Piece {
     pub kind: String
 }

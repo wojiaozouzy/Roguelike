@@ -2,14 +2,15 @@
 
 use super::models::{MeleeHitAction, WalkAction};
 use super::{
-    Action, ActionsCompleteEvent, ActorQueue, InvalidPlayerActionEvent, NextActorEvent,
-    PendingActions,
+    Action, ActionExecutedEvent, ActionsCompleteEvent, ActorQueue, InvalidPlayerActionEvent,
+    NextActorEvent, PendingActions,
 };
+
 use crate::board::components::Position;
 use crate::board::CurrentBoard;
 use crate::pieces::components::{Actor, Melee, Occupier, Walk};
 use crate::player::Player;
-use crate::vectors::{find_path, ORTHO_DIRECTIONS};
+use crate::vectors::{find_path, Vector2Int, ORTHO_DIRECTIONS};
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
@@ -17,6 +18,7 @@ const MOVE_SCORE: i32 = 50;
 const ATTACK_SCORE: i32 = 100;
 const PLAYER_ATTACK_SCORE: i32 = 100;
 pub(crate) fn process_action_queue(world: &mut World) {
+    info!("进入process_action_queue");
     if process_pending_actions(world) {
         return;
     }
@@ -27,29 +29,41 @@ pub(crate) fn process_action_queue(world: &mut World) {
         world.send_event(ActionsCompleteEvent);
         return;
     };
+
     let Some(mut actor) = world.get_mut::<Actor>(entity) else {
+        // this can mean that the current actor
+        // has been removed from the world since creating the queue
+        // cue the next one
+        world.send_event(NextActorEvent);
         return;
     };
+    info!("行动对象entity:{:?}", entity);
     // clear the Actor vec
     let mut possible_actions = actor.0.drain(..).collect::<Vec<(Box<dyn Action>, i32)>>();
     // highest score first
     possible_actions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
+    possible_actions
+        .iter()
+        .for_each(|(a, b)| info!("实现的action名字:{:?}==>独占系统查询优先级index:{}", a, b));
     let mut success = false;
     for action in possible_actions {
-        if let Ok(result) = action.0.execute(world) {
-            if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
-                info!("result:{:?}",result);
-                pending.0 = result
-            }
-            success = true;
+        success = success || execute_action(action.0, world);
+        if success {
             break;
         }
     }
+    info!(
+        "success{}:玩家对象:{:?}",
+        success,
+        world.get::<Player>(entity).is_some()
+    );
     if !success && world.get::<Player>(entity).is_some() {
+        info!("触发一下InvalidPlayerActionEvent");
         world.send_event(InvalidPlayerActionEvent);
+        info!("触发一下InvalidPlayerActionEvent 完成");
         return;
     }
+    info!("触发一下NextActorEvent");
     world.send_event(NextActorEvent);
 }
 
@@ -67,6 +81,7 @@ pub fn plan_walk(
     occupier_query: Query<&Position, With<Occupier>>,
     board: Res<CurrentBoard>,
 ) {
+    info!("plan_walk");
     let Some(entity) = queue.0.get(0) else { return };
     let Ok((position, mut actor)) = query.get_mut(*entity) else {
         return;
@@ -111,6 +126,7 @@ pub fn plan_melee(
     player_query: Query<&Position, With<Player>>,
     queue: Res<ActorQueue>,
 ) {
+    info!("plan_melee");
     let Some(entity) = queue.0.get(0) else { return };
     let Ok((mut actor, melee)) = query.get_mut(*entity) else {
         return;
@@ -129,22 +145,25 @@ pub fn plan_melee(
 }
 
 fn process_pending_actions(world: &mut World) -> bool {
+    info!("进入缓存的process_pending_actions");
     let pending = match world.get_resource_mut::<PendingActions>() {
         Some(mut res) => res.0.drain(..).collect::<Vec<_>>(),
         _ => return false,
     };
-    info!("pending:{}",pending.len());
-    let mut next = Vec::new();
     let mut success = false;
     for action in pending {
-        if let Ok(result) = action.execute(world) {
-            next.extend(result);
-            success = true;
-        }
+        success = success || execute_action(action, world);
     }
-    // if there are any new actions assign them back to the resource
-    // should be safe to unwrap as we confirmed the resource at the beginning
-    let mut res = world.get_resource_mut::<PendingActions>().unwrap();
-    res.0 = next;
     success
+}
+
+fn execute_action(action: Box<dyn super::Action>, world: &mut World) -> bool {
+    if let Ok(result) = action.execute(world) {
+        if let Some(mut pending) = world.get_resource_mut::<PendingActions>() {
+            pending.0.extend(result);
+        }
+        world.send_event(ActionExecutedEvent(action));
+        return true;
+    }
+    false
 }

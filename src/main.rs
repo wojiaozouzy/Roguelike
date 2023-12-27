@@ -20,6 +20,7 @@ mod manager;
 mod pieces;
 mod player;
 mod states;
+mod ui;
 mod vectors;
 fn main() {
     #[cfg(target_arch = "wasm32")]
@@ -58,6 +59,7 @@ fn main() {
             actions::ActionsPlugin,
             manager::ManagerPlugin,
             pieces::PiecesPlugin,
+            ui::UiPlugin,
         ))
         .add_systems(Startup, (set_window_icon, camera::setup))
         .run();
