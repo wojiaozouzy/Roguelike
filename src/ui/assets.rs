@@ -5,11 +5,10 @@ use super::UiAssets;
 
 const TEXTURES: [&str; 1] = ["card"];
 
-
 pub fn load_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut asset_list: ResMut<crate::assets::AssetList>
+    mut asset_list: ResMut<crate::assets::AssetList>,
 ) {
     // font via http://www.dsg4.com/
     let font = asset_server.load("ui/04B_03.ttf");

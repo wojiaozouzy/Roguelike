@@ -22,4 +22,3 @@ pub fn spawn_tile_renderer(
         });
     }
 }
-

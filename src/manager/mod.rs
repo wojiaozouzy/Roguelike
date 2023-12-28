@@ -21,9 +21,13 @@ impl Plugin for ManagerPlugin {
                     turn_update_cancel.run_if(on_event::<InvalidPlayerActionEvent>()),
                     tick.in_set(TurnSet::Tick),
                 ),
-                
-            ).configure_sets(Update,  (TurnSet::Logic, TurnSet::Animation, TurnSet::Tick)
-            .chain().run_if(in_state(GameState::TurnUpdate)));
+            )
+            .configure_sets(
+                Update,
+                (TurnSet::Logic, TurnSet::Animation, TurnSet::Tick)
+                    .chain()
+                    .run_if(in_state(GameState::TurnUpdate)),
+            );
     }
 }
 

@@ -4,19 +4,19 @@ use bevy::prelude::*;
 pub enum MainState {
     #[default]
     LoadAssets,
-    Game
+    Game,
 }
 #[derive(Clone, Debug, Default, Hash, Eq, States, PartialEq)]
 pub enum GameState {
     #[default]
     None,
     PlayerInput,
-    TurnUpdate
+    TurnUpdate,
 }
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum TurnSet {
     Logic,
     Animation,
-    Tick
+    Tick,
 }

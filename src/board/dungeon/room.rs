@@ -9,7 +9,7 @@ pub trait RoomGenerator {
 pub struct GeneratorResult {
     pub rooms: Vec<Room>,
     // connections are defined by room indices
-    pub connections: Vec<(usize, usize)>
+    pub connections: Vec<(usize, usize)>,
 }
 pub struct BubbleGenerator {
     // bounds for a random room count
@@ -18,14 +18,14 @@ pub struct BubbleGenerator {
     pub room_size: (u32, u32),
     // min distance between rooms
     pub room_padding: Option<u32>,
-    pub extra_connection_chance: f64
+    pub extra_connection_chance: f64,
 }
 impl BubbleGenerator {
     fn random_dim(&self) -> (i32, i32) {
         let mut rng = thread_rng();
         (
             rng.gen_range(self.room_size.0..=self.room_size.1) as i32,
-            rng.gen_range(self.room_size.0..=self.room_size.1) as i32
+            rng.gen_range(self.room_size.0..=self.room_size.1) as i32,
         )
     }
 }
@@ -35,12 +35,7 @@ impl RoomGenerator for BubbleGenerator {
         let mut connections = Vec::new();
 
         let (w, h) = self.random_dim();
-        let mut rooms = vec![
-            Room::new(
-                Vector2Int::new(0, 0),
-                Vector2Int::new(w, h)
-            )
-        ];
+        let mut rooms = vec![Room::new(Vector2Int::new(0, 0), Vector2Int::new(w, h))];
         // helper value for random point bounds
         let max_dist = self.room_size.1 as i32;
 
@@ -53,20 +48,23 @@ impl RoomGenerator for BubbleGenerator {
                 let centre = rooms[prev_idx].centre();
                 let a = Vector2Int::new(
                     rng.gen_range(centre.x - max_dist..=centre.x + max_dist),
-                    rng.gen_range(centre.y - max_dist..=centre.y + max_dist)
+                    rng.gen_range(centre.y - max_dist..=centre.y + max_dist),
                 );
-              
+
                 // get random room size
                 let (w, h) = self.random_dim();
                 // get a second corner in a random direction
                 let b = Vector2Int::new(
                     a.x + *[-w, w].choose(&mut rng).unwrap(),
-                    a.y + *[-h, h].choose(&mut rng).unwrap()
+                    a.y + *[-h, h].choose(&mut rng).unwrap(),
                 );
-                
+
                 let r = Room::new(a, b);
                 // check for overlaps with the other rooms
-                if rooms.iter().any(|other| r.intersects(other, self.room_padding)) {
+                if rooms
+                    .iter()
+                    .any(|other| r.intersects(other, self.room_padding))
+                {
                     continue;
                 }
                 connections.push((prev_idx, rooms.len()));
@@ -104,19 +102,17 @@ impl Room {
         ]
     }
     pub fn centre(&self) -> Vector2Int {
-        Vector2Int::new((self.b.x+self.a.x) / 2, (self.b.y+self.a.y) / 2)
+        Vector2Int::new((self.b.x + self.a.x) / 2, (self.b.y + self.a.y) / 2)
     }
     pub fn intersects(&self, other: &Room, border: Option<u32>) -> bool {
         let b = match border {
             Some(a) => a as i32,
-            None => 0
+            None => 0,
         };
-        !(
-            other.a.x > self.b.x + b ||
-            other.b.x < self.a.x - b ||
-            other.a.y > self.b.y + b ||
-            other.b.y < self.a.y - b
-        )
+        !(other.a.x > self.b.x + b
+            || other.b.x < self.a.x - b
+            || other.a.y > self.b.y + b
+            || other.b.y < self.a.y - b)
     }
     pub fn random_point(&self) -> Vector2Int {
         let mut rng = thread_rng();

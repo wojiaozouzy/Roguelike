@@ -3,7 +3,10 @@ use std::collections::HashSet;
 
 use crate::vectors::Vector2Int;
 
-use super::{room::{Room, RoomGenerator}, tunneler::Tunneler};
+use super::{
+    room::{Room, RoomGenerator},
+    tunneler::Tunneler,
+};
 
 pub struct Area {
     pub rooms: Vec<Room>,
@@ -50,7 +53,9 @@ impl Area {
     pub fn generate_rooms(&mut self) {
         let result = self.room_generator.generate();
         self.rooms = result.rooms;
-        self.paths = result.connections.iter()
+        self.paths = result
+            .connections
+            .iter()
             .map(|a| self.join_rooms(&self.rooms[a.0], &self.rooms[a.1]))
             .collect();
     }

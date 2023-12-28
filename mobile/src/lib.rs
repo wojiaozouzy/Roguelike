@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::window::WindowMode;
-// use my_bevy_roguelike::GamePlugin; 
+// use my_bevy_roguelike::GamePlugin;
 
 #[bevy_main]
 fn main() {

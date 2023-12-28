@@ -1,37 +1,44 @@
-
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap, HashSet, VecDeque}
+    collections::{BinaryHeap, HashMap, HashSet, VecDeque},
 };
 
-use super::{ORTHO_DIRECTIONS, Vector2Int};
+use super::{Vector2Int, ORTHO_DIRECTIONS};
 
 pub fn find_path(
     start: Vector2Int,
     end: Vector2Int,
     tiles: &HashSet<Vector2Int>,
-    blockers: &HashSet<Vector2Int>
+    blockers: &HashSet<Vector2Int>,
 ) -> Option<VecDeque<Vector2Int>> {
-    
     let mut queue = BinaryHeap::new();
-    queue.push(Node { v: start, cost: 0});
+    queue.push(Node { v: start, cost: 0 });
     let mut visited = HashMap::new();
     visited.insert(start, 0);
     let mut came_from = HashMap::new();
 
     while let Some(Node { v, cost }) = queue.pop() {
-        if v == end { break; }
+        if v == end {
+            break;
+        }
         for dir in ORTHO_DIRECTIONS {
             let n = v + dir;
             let new_cost = cost + 1;
-            if !tiles.contains(&n) { continue }
+            if !tiles.contains(&n) {
+                continue;
+            }
             // we allow the target to be a blocker
-            if blockers.contains(&n) && n != end { continue }
+            if blockers.contains(&n) && n != end {
+                continue;
+            }
             match visited.get(&n) {
                 Some(c) if *c <= new_cost => (),
                 _ => {
                     visited.insert(n, new_cost);
-                    queue.push(Node { v: n, cost: new_cost });
+                    queue.push(Node {
+                        v: n,
+                        cost: new_cost,
+                    });
                     came_from.insert(n, v);
                 }
             }
@@ -42,7 +49,9 @@ pub fn find_path(
     while let Some(v) = came_from.get(&cur) {
         path.push_front(cur);
         cur = *v;
-        if cur == start { return Some(path) }
+        if cur == start {
+            return Some(path);
+        }
     }
     None
 }
@@ -51,12 +60,14 @@ pub fn find_path(
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct Node {
     pub v: Vector2Int,
-    pub cost: u32
+    pub cost: u32,
 }
 
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.cost.cmp(&self.cost)
+        other
+            .cost
+            .cmp(&self.cost)
             .then_with(|| self.v.cmp(&other.v))
     }
 }

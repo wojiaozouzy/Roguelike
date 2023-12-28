@@ -32,10 +32,10 @@ impl Action for WalkAction {
     }
 
     fn name(&self) -> String {
-        format!("MeleeHitAction{:?}{:?}",self.0,self.1)
+        format!("MeleeHitAction{:?}{:?}", self.0, self.1)
     }
 
-    fn as_any(&self) ->  &dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }
@@ -48,40 +48,47 @@ impl Action for MeleeHitAction {
     fn execute(&self, world: &mut World) -> Result<Vec<Box<dyn Action>>, ()> {
         info!("近战行为");
         let attacker_position = world.get::<Position>(self.attacker).ok_or(())?;
-        info!("攻击者的位置:{:?}==攻击者的id{:?}",attacker_position.v,self.attacker);
-        info!("玩家的位置:{:?}",self.target);
+        info!(
+            "攻击者的位置:{:?}==攻击者的id{:?}",
+            attacker_position.v, self.attacker
+        );
+        info!("玩家的位置:{:?}", self.target);
         if attacker_position.v.manhattan(self.target) > 1 {
             info!("近战行为距离大于1米");
             return Err(());
         };
         info!("近战行为距离小于1米");
         let target_entities = world
-            .query_filtered::<(Entity,&Piece, &Position), With<Health>>()
+            .query_filtered::<(Entity, &Piece, &Position), With<Health>>()
             .iter(world)
-            .filter(|(e, e1,p)|{ 
-                info!("所有对象有血量的对象e:{:?}==>类型{:?};p{:?}",e,e1,p);
-                p.v == self.target})
+            .filter(|(e, e1, p)| {
+                info!("所有对象有血量的对象e:{:?}==>类型{:?};p{:?}", e, e1, p);
+                p.v == self.target
+            })
             .collect::<Vec<_>>();
 
         if target_entities.len() == 0 {
             return Err(());
         };
-        target_entities.iter().for_each(|(e,e1,p)|{
-           
-            info!("有血量的对象e:{:?}==>类型{:?};p{:?}",e,e1,p)});
-            
+        target_entities
+            .iter()
+            .for_each(|(e, e1, p)| info!("有血量的对象e:{:?}==>类型{:?};p{:?}", e, e1, p));
+
         let result = target_entities
             .iter()
             .map(|e| Box::new(DamageAction(e.0, self.damage)) as Box<dyn Action>)
             .collect::<Vec<_>>();
 
-        info!("line{};result{:?}",line!(),result);
+        info!("line{};result{:?}", line!(), result);
         Ok(result)
     }
-    fn name(&self) ->  String {
-        format!("MeleeHitAction{:?}{:?}{:?}",self.attacker,self.target,self.damage)
+    fn name(&self) -> String {
+        format!(
+            "MeleeHitAction{:?}{:?}{:?}",
+            self.attacker, self.target, self.damage
+        )
     }
-    fn as_any(&self) ->  &dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }
@@ -91,8 +98,8 @@ impl Action for DamageAction {
         let Some(mut health) = world.get_mut::<Health>(self.0) else {
             return Err(());
         };
-        info!("被攻击的血量{:?}",health.value);
-        info!("被攻击的对象{:?}",self.0);
+        info!("被攻击的血量{:?}", health.value);
+        info!("被攻击的对象{:?}", self.0);
         health.value = health.value.saturating_sub(self.1);
         if health.value == 0 {
             // the unit is killed
@@ -100,10 +107,10 @@ impl Action for DamageAction {
         }
         Ok(Vec::new())
     }
-    fn name(&self) ->  String {
-        format!("DamageAction{:?}{:?}",self.0,self.1)
+    fn name(&self) -> String {
+        format!("DamageAction{:?}{:?}", self.0, self.1)
     }
-    fn as_any(&self) ->  &dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 }

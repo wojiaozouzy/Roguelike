@@ -2,24 +2,22 @@ use bevy::prelude::*;
 
 use crate::actions::Action;
 
-
-
-#[derive(Component,Debug)]
+#[derive(Component, Debug)]
 pub struct Piece {
-    pub kind: String
+    pub kind: String,
 }
 #[derive(Component, Default)]
 pub struct Actor(pub Vec<(Box<dyn Action>, i32)>);
 
 #[derive(Component)]
 pub struct Health {
-    pub value: u32
+    pub value: u32,
 }
 
 #[derive(Component)]
 pub struct Melee {
-// melee attack behaviour for the npcs
-    pub damage: u32
+    // melee attack behaviour for the npcs
+    pub damage: u32,
 }
 
 #[derive(Component)]

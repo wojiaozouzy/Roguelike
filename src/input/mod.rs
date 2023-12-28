@@ -30,7 +30,6 @@ fn player_input(
     // deck: Res<Deck>,
     mut ev_deck: EventWriter<DeckEvent>,
 ) {
-
     let Ok(position) = player_query.get_single_mut() else {
         return;
     };
@@ -41,5 +40,4 @@ fn player_input(
         info!("键盘输入player_input");
         ev_deck.send(DeckEvent(DeckEventKind::UseCard(Some(position.v + dir))));
     }
-
 }

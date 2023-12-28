@@ -20,10 +20,12 @@ fn spawn_test_npc(commands: &mut Commands, v: Vector2Int) {
     commands.spawn((
         components::Actor::default(),
         components::Health { value: 1 },
-        components::Piece { kind: "NPC".to_string() },
+        components::Piece {
+            kind: "NPC".to_string(),
+        },
         components::Melee { damage: 1 },
         components::Occupier,
         Position { v },
-        components::Walk
+        components::Walk,
     ));
 }
